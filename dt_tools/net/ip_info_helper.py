@@ -232,15 +232,21 @@ class IpHelper():
 
         if ip_info is None:
             LOGGER.debug(f'- {ip_address} NOT in cache or stale')
-            url=f'{BASE_URL}/{ip_address}?token={TOKEN}'
-            try:
-                resp = requests.get(url, verify=False)
-                ip_info = resp.json()
-                entry_updated = True
-            except Exception as ex:
-                resp = ""
-                LOGGER.debug(f'  ERROR- url: {url} ex: {repr(ex)}')
-                ip_info = {'ip': {ip_address}, "title": "Error in API call", 'error': f'Exception: {url}- {repr(ex)}'}
+            ip_info = {'ip': ip_address}
+            if not cls.is_ip_routable(ip_address):
+                ip_info['bogon'] = True
+            else:
+                url=f'{BASE_URL}/{ip_address}?token={TOKEN}'
+                try:
+                    resp = requests.get(url, verify=False)
+                    ip_info = resp.json()
+                    entry_updated = True
+                except Exception as ex:
+                    resp = ""
+                    LOGGER.debug(f'  ERROR- url: {url} ex: {repr(ex)}')
+                    # ip_info = {'ip': ip_address, "title": "Error in API call", 'error': f'Exception: {url}- {repr(ex)}'}
+                    ip_info['title'] = 'Error in API call'
+                    ip_info['error'] = f'Exception: {url}- {repr(ex)}'
 
         if 'error' in ip_info.keys():
             LOGGER.warning(f'ERROR - url: {url}  resp: {ip_info}')
@@ -304,6 +310,27 @@ class IpHelper():
             ip_info = new_dict
 
         return ip_info
+
+
+    @classmethod
+    def is_ip_routable(cls, ip: str) -> bool:
+        """
+        Checks if an IP address is routable on the public internet.
+
+        Args:
+            ip (str): ip address
+
+        Returns:
+            bool: True if routable, False if not.
+        """
+
+        try:
+            ip = ipaddress.ip_address(ip)
+        except ValueError:
+            return False
+
+        return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast)
+    
 
     @classmethod
     def get_wan_ip_info(cls) -> Tuple[dict, int]:

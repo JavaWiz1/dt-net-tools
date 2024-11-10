@@ -163,7 +163,7 @@ class IpHelper():
                 IpHelper._cache_last_update_mtime = IP_INFO_CACHE_LOCATION.stat().st_mtime
                 LOGGER.debug(f'{ip_address} removed from cache')
             else:
-                LOGGER.warning(f'{ip_address} does NOT exist in cache')
+                LOGGER.debug(f'{ip_address} does NOT exist in cache')
         else:
             _CACHE_SEMAPHORE.acquire(timeout=2.0)
             IP_INFO_CACHE_LOCATION.write_text("{}")
@@ -232,7 +232,7 @@ class IpHelper():
         if ip_info is None:
             LOGGER.debug(f'- {ip_address} NOT in cache or stale')
             ip_info = {'ip': ip_address}
-            if not cls.is_ip_routable(ip_address):
+            if not nh.is_ip_routable(ip_address):
                 ip_info['bogon'] = True
             else:
                 url=f'{BASE_URL}/{ip_address}?token={TOKEN}'
@@ -312,26 +312,6 @@ class IpHelper():
 
 
     @classmethod
-    def is_ip_routable(cls, ip: str) -> bool:
-        """
-        Checks if an IP address is routable on the public internet.
-
-        Args:
-            ip (str): ip address
-
-        Returns:
-            bool: True if routable, False if not.
-        """
-
-        try:
-            ip = ipaddress.ip_address(ip)
-        except ValueError:
-            return False
-
-        return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast)
-    
-
-    @classmethod
     def get_wan_ip_info(cls) -> Tuple[dict, int]:
         """
         Return the WAN (ie. Internet) address for this device.
@@ -379,12 +359,11 @@ class IpHelper():
 
         found = len(found_keys)
         if found == 0:
-            LOGGER.warning(f'- Search key [{search_token}] NOT found')
+            LOGGER.debug(f'- Search key [{search_token}] NOT found')
         else:
             for key in found_keys:
                 cls.list_cache(key)
-            LOGGER.info('')
-            LOGGER.success(f'- {found} entries found.')
+            LOGGER.debug(f'- {found} entries found.')
 
         return found_keys
 
@@ -517,7 +496,6 @@ class IpHelper():
                 created = parser.parse(cached_time)
                 delta = datetime.now() - created
                 age_in_hours = delta.total_seconds() / _SECONDS_IN_HOUR
-                # LOGGER.debug(f'{ip_info["hostname"]} age in hours {age_in_hours}')
                 if age_in_hours > _CACHE_TTL_HOURS:
                     return True
             

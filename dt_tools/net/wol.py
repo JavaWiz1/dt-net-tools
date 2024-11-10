@@ -122,7 +122,7 @@ class WOL():
         try:
             sock.sendto(send_data, ("<broadcast>", 9))  # 7
         except Exception as ex:
-            LOGGER.warning(f'Error sending WOL: {repr(ex)}')
+            LOGGER.error(f'Error sending WOL: {repr(ex)}')
         finally:
             sock.close()
 

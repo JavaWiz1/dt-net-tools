@@ -18,17 +18,15 @@ import platform
 import random
 import socket
 import subprocess
-
 from dataclasses import dataclass
 from time import sleep
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
 
 import requests
 import scapy.all as scapy
-from loguru import logger as LOGGER
-
 from dt_tools.logger.logging_helper import logger_wraps
 from dt_tools.os.os_helper import OSHelper
+from loguru import logger as LOGGER
 
 _UNKNOWN = 'unknown'
 
@@ -240,12 +238,6 @@ def is_valid_host(host_name: str) -> bool:
     Returns:
         bool: True if hostname is resolvable else False
     """
-    # valid_host = False
-    # try:
-    #     ip_addr = ipaddress.ip_address(host_name)
-    # except ValueError as ve:
-    #     LOGGER.debug(f'host_name: {host_name} is NOT a valid IP address. [{ve}]')
-
     try:
         if is_valid_ipaddress(host_name):
             LOGGER.debug(f'is_valid_host() - check via IP addr: {host_name}')
@@ -561,8 +553,8 @@ def get_lan_clients_ARP_broadcast(include_hostname: bool = False, include_mac_ve
     lan_client_list: List[LAN_Client] = []
     for element in clients: 
         ip = element[1].psrc
-        if _trackable_ip(ip):
-            mac = element[1].hwsrc
+        if is_ip_routable(ip)
+            mac: str = element[1].hwsrc
             entry = LAN_Client(ip, mac.upper())
             lan_client_list.append(entry)
     
@@ -601,7 +593,7 @@ def get_lan_clients_from_ARP_cache(include_hostname: bool = False, include_mac_v
         # If windows, response will be IP MAC TYPE, else IP TYPE MAC
         arp_field = arp_entry.split()
         ip = arp_field[0]
-        if _trackable_ip(ip):
+        if is_ip_routable(ip):
             mac = arp_field[1] if OSHelper().is_windows() else arp_field[2]
             mac = mac.replace('-',':').upper()
             entry = LAN_Client(ip, mac)
@@ -639,17 +631,27 @@ def ping(host_name: str, wait_secs: int = 1) -> bool:
             
     return online_state
 
-# == Private Methods ==========================================================================
-def _trackable_ip(ip: str) -> bool:
-    trackable = True
-    if ip.startswith('224.') or \
-        ip.startswith('239.255.250.250') or \
-        ip.startswith('239.255.255.250') or \
-        ip.endswith('.255'):
-        trackable = False
-    
-    return trackable
+def is_ip_routable(ip: str) -> bool:
+    """
+    Checks if an IP address is routable on the public internet.
 
+    Args:
+        ip (str): ip address
+
+    Returns:
+        bool: True if routable, False if not.
+    """
+
+    try:
+        ip = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+
+    return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast)
+
+
+
+# == Private Methods ==========================================================================
 @logger_wraps(level="TRACE")
 def _get_hostname_and_or_vendor(client_list: list, include_hostname: bool, include_mac_vendor: bool, bypass_cache: bool = False) -> List[LAN_Client]:
 
@@ -774,8 +776,9 @@ def _mac_separator() -> str:
 
 
 if __name__ == "__main__":
-    import dt_tools.cli.demos.dt_net_demos as cli
     import dt_tools.logger.logging_helper as lh
+    import dt_tools.cli.demos.dt_net_demos as cli
+
     lh.configure_logger()
     cli.demo()
     print(get_workgroup_name())

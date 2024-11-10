@@ -48,7 +48,7 @@ Helper tools for IP related information.
     One or both of the keys (vendor/hostname) must be supplied.
 
 """
-
+import ipaddress
 import json
 import pathlib
 from datetime import datetime, timedelta
@@ -58,14 +58,13 @@ from typing import Dict, List, Tuple
 import requests
 import urllib3
 from dateutil import parser
-from dt_tools.logger.logging_helper import logger_wraps
 from loguru import logger as LOGGER
 
 import dt_tools.net.ip_info_helper as ih
-from dt_tools.net import net_helper as nh
+from dt_tools.console.console_helper import TextStyle
 from dt_tools.console.console_helper import ConsoleHelper as console
-from dt_tools.console.console_helper import ColorFG, TextStyle
-
+from dt_tools.logger.logging_helper import logger_wraps
+from dt_tools.net import net_helper as nh
 
 BASE_URL='https://ipinfo.io'
 TOKEN="NOT SET"

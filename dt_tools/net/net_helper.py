@@ -553,7 +553,7 @@ def get_lan_clients_ARP_broadcast(include_hostname: bool = False, include_mac_ve
     lan_client_list: List[LAN_Client] = []
     for element in clients: 
         ip = element[1].psrc
-        if is_ip_routable(ip)
+        if is_ip_routable(ip):
             mac: str = element[1].hwsrc
             entry = LAN_Client(ip, mac.upper())
             lan_client_list.append(entry)
@@ -782,3 +782,4 @@ if __name__ == "__main__":
     lh.configure_logger()
     cli.demo()
     print(get_workgroup_name())
+    print(get_ip_from_mac('18:c0:4d:d8:e1:4e'))

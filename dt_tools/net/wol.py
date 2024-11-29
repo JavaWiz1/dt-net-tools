@@ -131,10 +131,14 @@ class WOL():
             return True
 
         if ip is None:
-            ip = nh.get_ip_from_mac(mac)
+            try:
+                ip = nh.get_ip_from_mac(mac)
+            except ValueError as ve:
+                LOGGER.error({ve})
+
             if ip is None:
                 LOGGER.debug(f'ERROR: Unable to resolve IP from MAC {mac}')
-                cls._status_message = "Packet sent, no wait, could not resolve IP."
+                cls._status_message = "Packet sent, could not resolve IP, not waiting for device to come online."
                 return True
 
         is_online = cls._wait_for_device_to_come_online(ip, wait_secs)

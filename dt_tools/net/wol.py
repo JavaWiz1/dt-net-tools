@@ -30,6 +30,7 @@ from loguru import logger as LOGGER
 import dt_tools.logger.logging_helper as lh
 import dt_tools.net.net_helper as nh
 from dt_tools.console.spinner import Spinner, SpinnerType
+from dt_tools.os.os_helper import OSHelper
 
 # from dt_tools.console.progress_bar import ProgressBar
 
@@ -163,8 +164,9 @@ class WOL():
     def _wait_for_device_to_come_online(cls, ip: str, wait_secs: int) -> bool:
         is_online = nh.ping(ip)
         if not is_online:
-            spinner = Spinner(caption=f'- Waiting for {ip} to come online', spinner=SpinnerType.DOTS, show_elapsed=True)
-            spinner.start_spinner()
+            if OSHelper.is_running_in_foreground():
+                spinner = Spinner(caption=f'- Waiting for {ip} to come online', spinner=SpinnerType.DOTS, show_elapsed=True)
+                spinner.start_spinner()
             LOGGER.debug(f'Waiting for {wait_secs} seconds for device to come online.')
             start = time.time()
             elapsed = 0
@@ -172,6 +174,7 @@ class WOL():
                 time.sleep(1)
                 is_online = nh.ping(ip)
                 elapsed = time.time() - start
+        if OSHelper.is_running_in_foreground():
             spinner.stop_spinner()
 
         return is_online

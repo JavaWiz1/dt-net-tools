@@ -164,9 +164,15 @@ class WOL():
     def _wait_for_device_to_come_online(cls, ip: str, wait_secs: int) -> bool:
         is_online = nh.ping(ip)
         if not is_online:
+            valid_spinner = False
             if OSHelper.is_running_in_foreground():
-                spinner = Spinner(caption=f'- Waiting for {ip} to come online', spinner=SpinnerType.DOTS, show_elapsed=True)
-                spinner.start_spinner()
+                try:
+                    spinner = Spinner(caption=f'- Waiting for {ip} to come online', spinner=SpinnerType.DOTS, show_elapsed=True)
+                    spinner.start_spinner()
+                    valid_spinner = True
+                except Exception:
+                    # Could not create spinner
+                    pass
             LOGGER.debug(f'Waiting for {wait_secs} seconds for device to come online.')
             start = time.time()
             elapsed = 0
@@ -174,7 +180,7 @@ class WOL():
                 time.sleep(1)
                 is_online = nh.ping(ip)
                 elapsed = time.time() - start
-        if OSHelper.is_running_in_foreground():
+        if valid_spinner:
             spinner.stop_spinner()
 
         return is_online

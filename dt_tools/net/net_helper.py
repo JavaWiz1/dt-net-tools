@@ -553,7 +553,7 @@ def get_lan_clients_ARP_broadcast(include_hostname: bool = False, include_mac_ve
     lan_client_list: List[LAN_Client] = []
     for element in clients: 
         ip = element[1].psrc
-        if is_ip_routable(ip):
+        if is_ip_local(ip):
             mac: str = element[1].hwsrc
             entry = LAN_Client(ip, mac.upper())
             lan_client_list.append(entry)
@@ -593,7 +593,7 @@ def get_lan_clients_from_ARP_cache(include_hostname: bool = False, include_mac_v
         # If windows, response will be IP MAC TYPE, else IP TYPE MAC
         arp_field = arp_entry.split()
         ip = arp_field[0]
-        if is_ip_routable(ip):
+        if is_ip_local(ip):
             mac = arp_field[1] if OSHelper().is_windows() else arp_field[2]
             mac = mac.replace('-',':').upper()
             entry = LAN_Client(ip, mac)
@@ -647,8 +647,35 @@ def is_ip_routable(ip: str) -> bool:
     except ValueError:
         return False
 
-    return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast)
+    # return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast)
+    return ip.is_global and not ip.is_reserved
 
+def is_ip_local(ip: str) -> bool:
+    """
+    Checks if an IP address is local address (i.e. not routable on public internet).
+
+    Args:
+        ip (str): ip address
+
+    Returns:
+        bool: True if local, False if not.
+    """
+
+    try:
+        ip: ipaddress.IPv4Address = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    # if ip.is_private:
+    #     print(f'ip_address    : {ip}')
+    #     print(f'is_multicast  : {ip.is_multicast}')
+    #     print(f'is_private    : {ip.is_private}')
+    #     print(f'is_global     : {ip.is_global}')
+    #     print(f'is_unspecified: {ip.is_unspecified}')
+    #     print(f'is_reserved   : {ip.is_reserved}')
+    #     print(f'is_loopback   : {ip.is_loopback}')
+    #     print(f'is_link_local : {ip.is_link_local}')
+    #     print('')
+    return ip.is_private and not ip.is_reserved
 
 
 # == Private Methods ==========================================================================

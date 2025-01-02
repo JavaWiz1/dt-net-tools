@@ -25,12 +25,12 @@ import socket
 import struct
 import time
 
-from loguru import logger as LOGGER
-
 import dt_tools.logger.logging_helper as lh
-import dt_tools.net.net_helper as nh
 from dt_tools.console.spinner import Spinner, SpinnerType
 from dt_tools.os.os_helper import OSHelper
+from loguru import logger as LOGGER
+
+import dt_tools.net.net_helper as nh
 
 # from dt_tools.console.progress_bar import ProgressBar
 
@@ -163,8 +163,8 @@ class WOL():
                     
     def _wait_for_device_to_come_online(cls, ip: str, wait_secs: int) -> bool:
         is_online = nh.ping(ip)
+        valid_spinner = False
         if not is_online:
-            valid_spinner = False
             if OSHelper.is_running_in_foreground():
                 try:
                     spinner = Spinner(caption=f'- Waiting for {ip} to come online', spinner=SpinnerType.DOTS, show_elapsed=True)
@@ -187,7 +187,7 @@ class WOL():
 
 
 if __name__ == "__main__":
-    lh.configure_logger(log_level="TRACE", log_format=lh.DEFAULT_CONSOLE_LOGFMT)
+    lh.configure_logger(log_level="TRACE", log_format=lh.DEFAULT_DEBUG_LOGFMT)
     wol = WOL()
     hostnames = ['nirvana', 'badhost']
     for hostname in hostnames:

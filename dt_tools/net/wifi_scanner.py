@@ -698,9 +698,8 @@ class IwlistWiFiScanner(ScannerBase):
 if __name__ == "__main__":
     import dt_tools.logger.logging_helper as lh
     from dt_tools.os.os_helper import OSHelper
-    from dt_tools.misc.helpers import ObjectHelper
     import dt_tools.net.nic as nic_helper
-    import json
+    import json  # noqa: F401
 
     lh.configure_logger(log_level="INFO", brightness=False)
     wifi_adapter_list = nic_helper.identify_wifi_adapters()
@@ -716,4 +715,5 @@ if __name__ == "__main__":
     names = [x.ssid.name for x in ap_list]
     print(','.join(names))
     for ap in ap_list:
-        print(json.dumps(ObjectHelper.to_dict(ap), indent=2))
+        # print(json.dumps(ObjectHelper.to_dict(ap), indent=2))
+        print(ap)

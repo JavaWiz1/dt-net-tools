@@ -324,7 +324,7 @@ def get_ip_from_mac(mac: str) -> str:
         rslt = ""
 
     LOGGER.debug(f'MAC: {mac}\nRESULT: {rslt}')
-    arp = [token for token in rslt if mac in token]
+    arp = [token for token in rslt if mac.lower() in token.lower()]
     arp_line = '' if len(arp) == 0 else arp[0]
     LOGGER.debug(f'  arp line: {arp}')
     ip = None

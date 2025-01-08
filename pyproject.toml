@@ -26,9 +26,7 @@ scapy = "^2.5"
 python-dateutil = "^2.9"
 dt-foundation = "*"
 dt-console = "*"
-dt-misc = "*"
 # dt-foundation = {path = "../dt-foundation", develop = true }
-# dt-misc = {path = "../dt-misc", develop = true }
 # dt-console = {path = "../dt-console", develop = true }
 
 [[tool.poetry.source]]

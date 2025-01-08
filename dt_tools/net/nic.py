@@ -6,14 +6,13 @@ Module to assist in identifying NIC cards and their properties.
 
 """
 from dataclasses import dataclass
-from dt_tools.os.os_helper import OSHelper
-from dt_tools.net.wifi_scanner import ScannerBase
 from typing import List
-from dt_tools.net.wifi_scanner import _CONSTANTS
-import dt_tools.logger.logging_helper as lh
 
+import dt_tools.logger.logging_helper as lh
+from dt_tools.os.os_helper import OSHelper
 from loguru import logger as LOGGER
-from dt_tools.misc.helpers import ObjectHelper as o_helper
+
+from dt_tools.net.wifi_scanner import _CONSTANTS, ScannerBase
 
 
 # ====================================================================================================
@@ -223,7 +222,7 @@ class WifiAdapterInfo:
 
 if __name__ == "__main__":
     lh.configure_logger(log_level="INFO", log_format=lh.DEFAULT_CONSOLE_LOGFMT)
-    import json
+    import json  # noqa: F401
 
     adapter_list = identify_all_adapters()
     LOGGER.info (f'All  Adapters: {adapter_list}')
@@ -235,7 +234,7 @@ if __name__ == "__main__":
             LOGGER.info('')
             LOGGER.info(f"Getting info for '{adapter_name}'")
             adapter = WifiAdapterInfo(adapter_name)
-            LOGGER.success(f'{json.dumps(o_helper.to_dict(adapter), indent=2)}')
+            LOGGER.success(f'adapter: {adapter}')
         except NameError  as ne:
             LOGGER.error(f'- {repr(ne)}.  Are you sure its a WiFi adapter?')
 

@@ -14,7 +14,6 @@ Functions to assist with network related information and tasks.
 """
 import ipaddress
 import pathlib
-import platform
 import random
 import socket
 import subprocess
@@ -24,9 +23,10 @@ from typing import List, Tuple, Union
 
 import requests
 import scapy.all as scapy
+from loguru import logger as LOGGER
+
 from dt_tools.logger.logging_helper import logger_wraps
 from dt_tools.os.os_helper import OSHelper
-from loguru import logger as LOGGER
 
 _UNKNOWN = 'unknown'
 
@@ -299,7 +299,7 @@ def get_ip_from_hostname(host_name: str = None) -> str:
     return ip
 
 @logger_wraps(level="TRACE")
-def get_ip_from_mac(mac: str) -> str:
+def get_ip_from_mac(mac: str, via_arp_broadcast: bool = False) -> str:
     """
     Get IP address based on MAC (via ARP)
 
@@ -315,28 +315,21 @@ def get_ip_from_mac(mac: str) -> str:
     """
     mac = format_mac(mac)
 
-    cmd_list = _arp_entries_command().split()
-    try:
-        process_rslt = subprocess.run(cmd_list, capture_output=True)
-        rslt = process_rslt.stdout.decode('utf-8').splitlines()
-    except Exception as ex:
-        LOGGER.error(f'get_ip_from_mac("{mac}"): unable to run {cmd_list}.  {repr(ex)}')
-        rslt = ""
+    if via_arp_broadcast:
+        LOGGER.debug(f'Attempt to resolve mac [{mac}] to IP via ARP Broadcast')
+        client_list = get_lan_clients_ARP_broadcast()
+    else:
+        LOGGER.debug(f'Attempt to resolve mac [{mac}] to IP via ARP Cache')
+        client_list = get_lan_clients_from_ARP_cache()
 
-    LOGGER.debug(f'MAC: {mac}\nRESULT: {rslt}')
-    arp = [token for token in rslt if mac.lower() in token.lower()]
-    arp_line = '' if len(arp) == 0 else arp[0]
-    LOGGER.debug(f'  arp line: {arp}')
     ip = None
-    if len(arp_line) > 0:
-        try:
-            if platform.system() == "Windows":
-                ip = " ".join(arp_line.split()).split()[0]
-            else:
-                # This used to be [2] for some reason...
-                ip = " ".join(arp_line.split()).split()[0]
-        except Exception as ex:
-            LOGGER.error(f'  mac [{mac}]-problem resolving ip: {arp_line} - {repr(ex)}')
+    mac_lc = mac.lower()
+    for client in client_list:
+        client_mac = format_mac(client.mac).lower()
+        LOGGER.trace(f'target mac: {mac_lc}  client mac: {client_mac}')
+        if mac_lc == client_mac:
+            ip = client.ip
+            break
 
     if ip is not None:
         LOGGER.debug(f'  MAC {mac} resolves to {ip}')
@@ -490,7 +483,6 @@ def get_vendor_from_mac(mac: str) -> str:
         while retry < RETRY_MAX and vendor == _UNKNOWN:
             resp = requests.get(url)
             if resp.status_code == 200:
-                # vendor = resp.json()['company']      # api.maclookup
                 vendor = resp.text # api.macvendors.com
                 if len(vendor) == 0:
                     LOGGER.debug(f'  ERROR: Vendor not found, {url}, {resp.text}')
@@ -665,16 +657,7 @@ def is_ip_local(ip: str) -> bool:
         ip: ipaddress.IPv4Address = ipaddress.ip_address(ip)
     except ValueError:
         return False
-    # if ip.is_private:
-    #     print(f'ip_address    : {ip}')
-    #     print(f'is_multicast  : {ip.is_multicast}')
-    #     print(f'is_private    : {ip.is_private}')
-    #     print(f'is_global     : {ip.is_global}')
-    #     print(f'is_unspecified: {ip.is_unspecified}')
-    #     print(f'is_reserved   : {ip.is_reserved}')
-    #     print(f'is_loopback   : {ip.is_loopback}')
-    #     print(f'is_link_local : {ip.is_link_local}')
-    #     print('')
+
     return ip.is_private and not ip.is_reserved
 
 
@@ -803,10 +786,15 @@ def _mac_separator() -> str:
 
 
 if __name__ == "__main__":
-    import dt_tools.logger.logging_helper as lh
     import dt_tools.cli.demos.dt_net_demos as cli
-
-    lh.configure_logger()
-    cli.demo()
+    import dt_tools.logger.logging_helper as lh
+    
+    lh.configure_logger(log_level="INFO")
+    cli.net_helper_demo()
     print(get_workgroup_name())
-    print(get_ip_from_mac('18:c0:4d:d8:e1:4e'))
+    mac = "a0:D7:f3:93:17:6a"
+    try:
+        print(get_ip_from_mac(mac))
+    except:
+        print(get_ip_from_mac(mac, via_arp_broadcast=True))
+    print('all done.')

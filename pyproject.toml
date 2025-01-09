@@ -1,7 +1,7 @@
 [tool.poetry]
 package-mode = true 
 name = "dt-net"
-version = "0.1.25"
+version = "0.1.26"
 description = "Network helper tools"
 authors = ["Al DAmico <JavaWiz1@hotmail.com>"]
 readme = "README.md"

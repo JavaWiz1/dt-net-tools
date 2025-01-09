@@ -19,7 +19,7 @@ import random
 import socket
 import subprocess
 from dataclasses import dataclass
-from time import sleep
+from time import sleep, time
 from typing import List, Tuple, Union
 
 import requests
@@ -618,6 +618,16 @@ def ping(host_name: str, wait_secs: int = 1) -> bool:
     Returns:
         True if host responds, False if timeout or error.
     """
+    online = False
+    start = time()
+    elapsed = -1
+    while not online and elapsed < wait_secs:
+        online = _ping(host_name, wait_secs=wait_secs)
+        elapsed = time() - start
+
+    return online
+
+def _ping(host_name: str, wait_secs: int) -> bool:
     # Token can be an IP or a hostname
     if OSHelper().is_windows():
         ping_cmd = ['ping', '-n', '1', '-w', str(wait_secs * 1000), host_name]

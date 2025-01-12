@@ -544,8 +544,8 @@ def get_lan_clients_ARP_broadcast(include_hostname: bool = False, include_mac_ve
 
     lan_client_list: List[LAN_Client] = []
     for element in clients: 
-        ip = element[1].psrc
-        if is_ip_local(ip):
+        ip:str = element[1].psrc
+        if is_ip_local(ip) and not ip.endswith('.255'):
             mac: str = element[1].hwsrc
             entry = LAN_Client(ip, mac.upper())
             lan_client_list.append(entry)
@@ -584,8 +584,8 @@ def get_lan_clients_from_ARP_cache(include_hostname: bool = False, include_mac_v
     for arp_entry in tokens:
         # If windows, response will be IP MAC TYPE, else IP TYPE MAC
         arp_field = arp_entry.split()
-        ip = arp_field[0]
-        if is_ip_local(ip):
+        ip: str = arp_field[0]
+        if is_ip_local(ip) and ip.endswith('.255'):
             mac = arp_field[1] if OSHelper().is_windows() else arp_field[2]
             mac = mac.replace('-',':').upper()
             entry = LAN_Client(ip, mac)
@@ -805,6 +805,7 @@ if __name__ == "__main__":
     mac = "a0:D7:f3:93:17:6a"
     try:
         print(get_ip_from_mac(mac))
-    except:
+    except Exception:
         print(get_ip_from_mac(mac, via_arp_broadcast=True))
     print('all done.')
+    

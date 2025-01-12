@@ -614,7 +614,7 @@ def ping(host_name: str, wait_secs: int = 1) -> bool:
     start = time()
     elapsed = -1
     while not online and elapsed < wait_secs:
-        online = _ping(host_name, wait_secs=wait_secs)
+        online = _ping(host_name, wait_secs=wait_secs if wait_secs < 3 else 1)
         elapsed = time() - start
 
     return online

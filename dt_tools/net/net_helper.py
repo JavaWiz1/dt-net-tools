@@ -585,7 +585,7 @@ def get_lan_clients_from_ARP_cache(include_hostname: bool = False, include_mac_v
         # If windows, response will be IP MAC TYPE, else IP TYPE MAC
         arp_field = arp_entry.split()
         ip: str = arp_field[0]
-        if is_ip_local(ip) and ip.endswith('.255'):
+        if is_ip_local(ip) and not ip.endswith('.255'):
             mac = arp_field[1] if OSHelper().is_windows() else arp_field[2]
             mac = mac.replace('-',':').upper()
             entry = LAN_Client(ip, mac)
